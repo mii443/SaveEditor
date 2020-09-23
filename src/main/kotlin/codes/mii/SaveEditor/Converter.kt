@@ -4,7 +4,6 @@ import codes.mii.SaveEditor.Types.*
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-import kotlin.experimental.and
 
 class Converter {
     @ExperimentalUnsignedTypes
@@ -22,17 +21,8 @@ class Converter {
                 val name = StringBuilder()
 
                 if (nowByte != 0.toByte()) {
-                    val nameLengthText = StringBuilder()
-                    repeat(2) {
-                        readingPosition++
-                        val n = if (it != 1){
-                            (byte[readingPosition].toUByte()).toString(16)
-                        } else {
-                            (byte[readingPosition]).toString(16)
-                        }
-                        nameLengthText.append(if (n.length == 2) { n } else { "0$n" })
-                    }
-                    nameLength = nameLengthText.toString().toInt(16)
+                    nameLength = readMultiByte(byte, readingPosition, 2).toInt()
+                    readingPosition += 2
 
                     repeat(nameLength) {
                         readingPosition++
@@ -51,62 +41,20 @@ class Converter {
                         result.data.add(NBT_Byte(nameLength.toByte(), name.toString(), byte[readingPosition]))
                     }
 
-                    2.toByte() -> { // SHORT
-                        val bytes = StringBuilder()
-                        repeat(2) {
-                            readingPosition++
-                            val n = if (it != 1){
-                                (byte[readingPosition].toUByte()).toString(16)
-                            } else {
-                                (byte[readingPosition]).toString(16)
-                            }
-                            bytes.append(if (n.length == 2) { n } else { "0$n" })
+                    2.toByte(), 3.toByte(), 4.toByte() -> {
+                        val n = when(nowByte) {
+                            3.toByte() -> { 4 }
+                            4.toByte() -> { 8 }
+                            else -> { 2 }
                         }
-
-                        result.data.add(NBT_Short(nameLength.toByte(), name.toString(), bytes.toString().toInt(16)))
-                    }
-
-                    3.toByte() -> { // INT
-                        var intText = StringBuilder()
-                        repeat(4) {
-                            readingPosition++
-                            val n = if (it != 1){
-                                (byte[readingPosition].toUByte()).toString(16)
-                            } else {
-                                (byte[readingPosition]).toString(16)
-                            }
-                            intText.append(if (n.length == 2) { n } else { "0$n" })
-                        }
-                        result.data.add(NBT_Int(nameLength.toByte(), name.toString(), intText.toString().toInt(16)))
-                    }
-
-                    4.toByte() -> { // LONG
-                        val intText = StringBuilder()
-                        repeat(8) {
-                            readingPosition++
-                            val n = if (it != 1){
-                                (byte[readingPosition].toUByte()).toString(16)
-                            } else {
-                                (byte[readingPosition]).toString(16)
-                            }
-
-                            intText.append(if (n.length == 2) { n } else { "0$n" })
-                        }
-                        result.data.add(NBT_Long(nameLength.toByte(), name.toString(), intText.toString().toLong(16)))
+                        result.data.add(NBT_Short(nameLength.toByte(), name.toString(), readMultiByte(byte, readingPosition, n).toInt()))
+                        readingPosition += n
                     }
 
                     8.toByte() -> { // STRING
-                        val textLengthText = StringBuilder()
-                        repeat(2) {
-                            readingPosition++
-                            val n = if (it != 1){
-                                (byte[readingPosition].toUByte()).toString(16)
-                            } else {
-                                (byte[readingPosition]).toString(16)
-                            }
-                            textLengthText.append(if (n.length == 2) { n } else { "0$n" })
-                        }
-                        val textLength = textLengthText.toString().toInt(16)
+
+                        val textLength = readMultiByte(byte, readingPosition, 2).toInt()
+                        readingPosition += 2
 
                         val text = StringBuilder()
                         repeat(textLength) {
@@ -120,8 +68,6 @@ class Converter {
                     10.toByte() -> { // COMPOUND
                         result.data.add(NBT_Compound(nameLength.toByte(), name.toString()))
                     }
-
-
                 }
 
                 readingPosition++
@@ -131,6 +77,21 @@ class Converter {
         }
 
         return result
+    }
+
+    fun readMultiByte(byte: ByteArray, position: Int, count: Int): Long {
+        var readingPosition = position
+        val multiByteText = StringBuilder()
+        repeat(count) {
+            readingPosition++
+            val n = if (it != 1){
+                (byte[readingPosition].toUByte()).toString(16)
+            } else {
+                (byte[readingPosition]).toString(16)
+            }
+            multiByteText.append(if (n.length == 2) { n } else { "0$n" })
+        }
+        return multiByteText.toString().toLong(16)
     }
 
     fun byteToString(byte: ByteArray, readingPosition: Int) {
