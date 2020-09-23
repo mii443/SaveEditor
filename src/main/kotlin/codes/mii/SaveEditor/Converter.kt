@@ -18,16 +18,13 @@ class Converter {
 
                 val nowByte = byte[readingPosition]
                 var nameLength = 0
-                val name = StringBuilder()
+                var name = ""
 
                 if (nowByte != 0.toByte()) {
-                    nameLength = readMultiByte(byte, readingPosition, 2).toInt()
+                    nameLength = readMultiByteHex(byte, readingPosition, 2).toInt()
                     readingPosition += 2
-
-                    repeat(nameLength) {
-                        readingPosition++
-                        name.append(hexToAscii(byte[readingPosition].toString(16)))
-                    }
+                    name = byteToString(byte, readingPosition, nameLength)
+                    readingPosition += nameLength
                 }
 
                 when (nowByte) {
@@ -38,35 +35,28 @@ class Converter {
 
                     1.toByte() -> { // BYTE
                         readingPosition++
-                        result.data.add(NBT_Byte(nameLength.toByte(), name.toString(), byte[readingPosition]))
+                        result.data.add(NBT_Byte(nameLength.toByte(), name, byte[readingPosition]))
                     }
 
                     2.toByte(), 3.toByte(), 4.toByte() -> {
                         val n = when(nowByte) {
-                            3.toByte() -> { 4 }
-                            4.toByte() -> { 8 }
-                            else -> { 2 }
+                            3.toByte() -> 4
+                            4.toByte() -> 8
+                            else -> 2
                         }
-                        result.data.add(NBT_Short(nameLength.toByte(), name.toString(), readMultiByte(byte, readingPosition, n).toInt()))
+                        result.data.add(NBT_Short(nameLength.toByte(), name, readMultiByteHex(byte, readingPosition, n).toInt()))
                         readingPosition += n
                     }
 
                     8.toByte() -> { // STRING
-
-                        val textLength = readMultiByte(byte, readingPosition, 2).toInt()
-                        readingPosition += 2
-
-                        val text = StringBuilder()
-                        repeat(textLength) {
-                            readingPosition++
-                            text.append(hexToAscii(byte[readingPosition].toString(16)))
-                        }
-
-                        result.data.add(NBT_String(nameLength.toByte(), name.toString(), textLength.toByte(), text.toString()))
+                        readingPosition -= nameLength + 2
+                        val res = byte.toNBT_String(readingPosition)
+                        readingPosition += res.second
+                        result.data.add(res.first)
                     }
 
                     10.toByte() -> { // COMPOUND
-                        result.data.add(NBT_Compound(nameLength.toByte(), name.toString()))
+                        result.data.add(NBT_Compound(nameLength.toByte(), name))
                     }
                 }
 
@@ -79,7 +69,8 @@ class Converter {
         return result
     }
 
-    fun readMultiByte(byte: ByteArray, position: Int, count: Int): Long {
+    @ExperimentalUnsignedTypes
+    fun readMultiByteHex(byte: ByteArray, position: Int, count: Int): Long {
         var readingPosition = position
         val multiByteText = StringBuilder()
         repeat(count) {
@@ -94,15 +85,6 @@ class Converter {
         return multiByteText.toString().toLong(16)
     }
 
-    fun byteToString(byte: ByteArray, readingPosition: Int) {
-
-    }
-
-    @Throws(IOException::class)
-    fun convertFile(file: File): ByteArray? {
-        return Files.readAllBytes(file.toPath())
-    }
-
     private fun hexToAscii(hexStr: String): String? {
         val output = StringBuilder("")
         var i = 0
@@ -112,5 +94,22 @@ class Converter {
             i += 2
         }
         return output.toString()
+    }
+
+    fun byteToString(byte: ByteArray, position: Int, count: Int): String {
+        var readingPosition = position
+        val name = StringBuilder()
+
+        repeat(count) {
+            readingPosition++
+            name.append(hexToAscii(byte[readingPosition].toString(16)))
+        }
+
+        return name.toString()
+    }
+
+    @Throws(IOException::class)
+    fun convertFile(file: File): ByteArray? {
+        return Files.readAllBytes(file.toPath())
     }
 }
