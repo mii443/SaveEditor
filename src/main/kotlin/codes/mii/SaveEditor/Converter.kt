@@ -27,18 +27,18 @@ class Converter {
                     readingPosition += nameLength
                 }
 
-                when (nowByte) {
-                    0.toByte() -> { // END
+                when (nowByte.toInt()) {
+                    0 -> { // END
                         result.data.add(NBT_End())
                         readingPosition++
                     }
 
-                    1.toByte() -> { // BYTE
+                    1 -> { // BYTE
                         readingPosition++
                         result.data.add(NBT_Byte(nameLength.toByte(), name, byte[readingPosition]))
                     }
 
-                    2.toByte(), 3.toByte(), 4.toByte() -> {
+                    2, 3, 4 -> {
                         val n = when(nowByte) {
                             3.toByte() -> 4
                             4.toByte() -> 8
@@ -48,14 +48,14 @@ class Converter {
                         readingPosition += n
                     }
 
-                    8.toByte() -> { // STRING
+                    8 -> { // STRING
                         readingPosition -= nameLength + 2
                         val res = byte.toNBT_String(readingPosition)
                         readingPosition += res.second
                         result.data.add(res.first)
                     }
 
-                    10.toByte() -> { // COMPOUND
+                    10 -> { // COMPOUND
                         result.data.add(NBT_Compound(nameLength.toByte(), name))
                     }
                 }
@@ -68,6 +68,77 @@ class Converter {
 
         return result
     }
+
+    fun ByteToCompound(byte: ByteArray, position: Int, disableName: Boolean = false): Pair<NBT_Compound, Int> {
+        var readingPosition = position
+        val nowByte = byte[readingPosition]
+        var nameLength = 0
+        var name = ""
+
+        if (!disableName) {
+            nameLength = readMultiByteHex(byte, readingPosition, 2).toInt()
+            readingPosition += 2
+            name = byteToString(byte, readingPosition, nameLength)
+            readingPosition += nameLength + 1
+        }
+
+        val compound = NBT_Compound(nameLength.toByte(), name)
+
+        while(byte[readingPosition].toInt() != 0) {
+            when(byte[readingPosition].toInt()) {
+
+            }
+        }
+
+        return compound to readingPosition
+
+    }
+
+    fun ByteToByte(byte: ByteArray, position: Int, disableName: Boolean = false): Pair<NBT_Byte, Int> {
+        var readingPosition = position
+        val nowByte = byte[readingPosition]
+        var nameLength = 0
+        var name = ""
+
+        if (!disableName) {
+            nameLength = readMultiByteHex(byte, readingPosition, 2).toInt()
+            readingPosition += 2
+            name = byteToString(byte, readingPosition, nameLength)
+            readingPosition += nameLength + 1
+        }
+
+        return NBT_Byte(nameLength.toByte(), name, byte[readingPosition]) to readingPosition+1
+    }
+
+    fun ByteToInt() {
+
+    }
+
+    fun ByteToShort() {
+
+    }
+
+    fun ByteToLong() {
+
+    }
+
+    fun ByteToString() {
+
+    }
+
+    fun ByteToFloat() {
+
+    }
+
+    fun ByteToDouble() {
+
+    }
+
+    fun ByteToList() {
+
+    }
+
+
 
     @ExperimentalUnsignedTypes
     fun readMultiByteHex(byte: ByteArray, position: Int, count: Int): Long {
