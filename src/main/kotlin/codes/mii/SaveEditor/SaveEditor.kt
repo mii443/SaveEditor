@@ -77,14 +77,16 @@ class SaveEditor {
         if (args.count() >= 1) {
             val bytes = converter.convertFile(File(args[0]))
 
-            /*
+
             val inp = StringBuilder()
             bytes?.forEach {
                 val n = it.toString(16)
                 inp.append(if (n.length == 1) { "0$n " } else { "$n " })
             }
             println("input: $inp")
-             */
+
+
+            /*
             println("Converting...")
             val result = converter.convert(bytes!!)
             println("Converted.\n\nresult\n")
@@ -92,6 +94,8 @@ class SaveEditor {
             result.data.forEach {
                 showNBT(it)
             }
+
+             */
         }
     }
 }

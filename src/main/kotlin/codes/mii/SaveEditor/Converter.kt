@@ -4,12 +4,47 @@ import codes.mii.SaveEditor.Types.*
 import java.io.File
 import java.io.IOException
 import java.math.BigInteger
-import java.nio.ByteBuffer
 import java.nio.file.Files
-import kotlin.experimental.and
 
 
 class Converter {
+
+    fun compoundToByte(data: NBT_Compound): ByteArray {
+        val byteArray = mutableListOf<Byte>()
+
+
+
+        val bytes = ByteArray(byteArray.count())
+        byteArray.forEachIndexed { index, byte ->
+
+        }
+
+        return
+    }
+
+    fun nbtByteToBytes(data: NBT_Byte): ByteArray {
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @ExperimentalUnsignedTypes
     fun convert(byte: ByteArray): NBT_Compound {
         var result = NBT_Compound(0, "")
@@ -18,157 +53,6 @@ class Converter {
 
         try {
             result = byteToCompound(byte, readingPosition).first
-            /*
-            while (byteSize > readingPosition) {
-                println(byte[readingPosition])
-
-                val nowByte = byte[readingPosition]
-                var nameLength = 0
-                var name = ""
-
-                if (nowByte != 0.toByte()) {
-                    nameLength = readMultiByteHex(byte, readingPosition, 2).toInt()
-                    readingPosition += 2
-                    name = byteToString(byte, readingPosition, nameLength)
-                    readingPosition += nameLength
-                }
-
-                when (nowByte.toInt()) {
-                    0 -> { // END
-                        result.data.add(NBT_End())
-                        readingPosition++
-                    }
-
-                    1 -> { // BYTE
-                        readingPosition++
-                        result.data.add(NBT_Byte(nameLength.toByte(), name, byte[readingPosition]))
-                    }
-
-                    2, 3, 4 -> { // SHORT, INT, LONG
-                        val n = when (nowByte) {
-                            3.toByte() -> 4
-                            4.toByte() -> 8
-                            else -> 2
-                        }
-                        result.data.add(
-                            NBT_Short(
-                                nameLength.toByte(),
-                                name,
-                                readMultiByteHex(byte, readingPosition, n).toInt()
-                            )
-                        )
-                        readingPosition += n
-                    }
-
-                    5 -> { // FLOAT
-                        result.data.add(
-                            NBT_Float(
-                                nameLength.toByte(),
-                                name,
-                                readMultiByteHex(byte, readingPosition, 4).toFloat()
-                            )
-                        )
-                        readingPosition += 4
-                    }
-
-                    6 -> { // DOUBLE
-                        result.data.add(
-                            NBT_Double(
-                                nameLength.toByte(),
-                                name,
-                                0.0
-                            )
-                        )//readMultiByteHex(byte, readingPosition, 8)
-                        readingPosition += 8
-                    }
-
-                    7 -> { // BYTE_ARRAY
-                        val listLength = readMultiByteHex(byte, readingPosition, 4).toInt()
-                        readingPosition += 4
-                        val byteList: MutableList<Byte> = mutableListOf()
-                        repeat(listLength) {
-                            readingPosition++
-                            byteList.add(byte[readingPosition])
-                        }
-                        result.data.add(NBT_Byte_Array(nameLength.toByte(), name, byteList))
-                    }
-
-                    8 -> { // STRING
-                        val textLength = readMultiByteHex(byte, readingPosition, 2).toInt()
-                        readingPosition += 2
-
-                        val text = byteToString(byte, readingPosition, textLength)
-                        readingPosition += textLength
-
-                        result.data.add(NBT_String(nameLength.toByte(), name, textLength.toByte(), text.toString()))
-                    }
-
-                    9 -> { // LIST
-                        readingPosition++
-                        val dataType = byte[readingPosition]
-                        val dataLength = when (dataType.toInt()) {
-                            0 -> 1
-                            1 -> 1
-                            2 -> 2
-                            3 -> 4
-                            4 -> 8
-                            5 -> 4
-                            6 -> 8
-                            10 -> 4
-                            else -> 0
-                        }
-                        val dataSize = readMultiByteHex(byte, readingPosition, 4).toInt()
-                        readingPosition += 4
-
-
-                        when (dataType.toInt()) {
-                            7 -> {
-                                repeat(dataSize) {
-
-                                }
-                            }
-
-                            8 -> {
-                                repeat(dataSize) {
-                                    val textLength = readMultiByteHex(byte, readingPosition, 2).toInt()
-                                    readingPosition += 2
-
-                                    val text = byteToString(byte, readingPosition, textLength)
-                                    readingPosition += textLength
-                                    println(text)
-                                }
-                            }
-
-                            11 -> {
-                                repeat(dataSize) {
-
-                                }
-                            }
-                        }
-
-                        readingPosition += dataSize * dataLength
-                        result.data.add(NBT_List(nameLength.toByte(), name, mutableListOf()))
-                    }
-
-                    10 -> { // COMPOUND
-                        result.data.add(NBT_Compound(nameLength.toByte(), name))
-                    }
-
-                    11 -> { // INT_ARRAY
-                        val listLength = readMultiByteHex(byte, readingPosition, 4).toInt()
-                        readingPosition += 4
-                        val byteList: MutableList<Int> = mutableListOf()
-                        repeat(listLength) {
-                            byteList.add(readMultiByteHex(byte, readingPosition, 4).toInt())
-                            readingPosition += 4
-                        }
-                        result.data.add(NBT_Int_Array(nameLength.toByte(), name, byteList))
-                    }
-                }
-
-                readingPosition++
-            }
-             */
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -176,7 +60,7 @@ class Converter {
         return result
     }
 
-    fun byteToByte(byte: ByteArray, position: Int, disableName: Boolean = false): Pair<NBT_Byte, Int> {
+    fun byteToNbtByte(byte: ByteArray, position: Int, disableName: Boolean = false): Pair<NBT_Byte, Int> {
         var readingPosition = position
         var nameLength = 0
         var name = ""
@@ -374,7 +258,7 @@ class Converter {
 
         repeat(listLength) {
             val (data, pos) = (when(dataType.toInt()) {
-                1 -> byteToByte(byte, readingPosition, true)
+                1 -> byteToNbtByte(byte, readingPosition, true)
                 2 -> byteToShort(byte, readingPosition, true)
                 3 -> byteToInt(byte, readingPosition, true)
                 4 -> byteToLong(byte, readingPosition, true)
@@ -444,7 +328,7 @@ class Converter {
             println("Converting id ${byte[readingPosition]}, position $readingPosition")
             when(byte[readingPosition].toInt()) {
                 1 -> {
-                    val (data, pos) = byteToByte(byte, readingPosition)
+                    val (data, pos) = byteToNbtByte(byte, readingPosition)
                     readingPosition = pos
                     compound.data.add(data)
                 }
@@ -555,5 +439,9 @@ class Converter {
     @Throws(IOException::class)
     fun convertFile(file: File): ByteArray? {
         return Files.readAllBytes(file.toPath())
+    }
+
+    fun regionToByte(file: File): ByteArray {
+        return ByteArray(0)
     }
 }
